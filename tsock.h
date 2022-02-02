@@ -13,25 +13,20 @@ données du réseau */
 /* pour la gestion des erreurs */
 #include <errno.h>
 #include <stdlib.h>
-/*pour getopt*/
-#include <unistd.h>
-
 
 
 
 
 /*---------------creation de fonction-----------------------*/
-/* ----------------------déclaration de fonctions ----------------------------*/ 
+/*---Création du socket UDP et envoi et reception ---------*/
 
-//void construiremessage2(char *message, char motif, int lg, int i);
+				      
+/* ------------------------déclaration de fonctions ----------------------------*/ 
+//void construire_message2(char *message, char motif, int lg, int i);
 //void afficher_message(char *message, int lg);
 void envoi_UDP(int port, int nb_message  , int lg_msg, char*dest);
 void reception_UDP(int port, int nb_message , int lg_message);
 void construire_message(char *message,char motif,int lg);
-/*---Création du socket UDP et envoi et reception ---------*/
-
-				      
-
 
 /*--------------définition de fonction --------------------------------------------------*/
 /*----------------fonction construction de message---------------------------------*/ 
@@ -69,12 +64,12 @@ void envoi_UDP(int port ,int nb_mess , int lg_msg,char*dest)
       exit(1);
     }
   	memset((char*)&addr_distant,0,sizeof(addr_distant));
-  	addr_distant.sin_family=AF_INET;  /*internet*/ 
-  	addr_distant.sin_port=htons(port);  /*num de port */ 
+  	addr_distant.sin_family=AF_INET; /internet/ 
+  	addr_distant.sin_port=port; */num de port */ 
 
   	if((hp=gethostbyname(dest))==NULL)
     {
-      printf("Erreur du gesthostbyname _n");/*num de port */ 
+      printf("Erreur du gesthostbyname _n");
       exit(1);
     }
 
@@ -99,7 +94,7 @@ void envoi_UDP(int port ,int nb_mess , int lg_msg,char*dest)
       printf("Echec à la destruction du socket\n");
       exit(1);
     }
-}
+
 /*------------------------------------------Reception UDP-------------------------------------------*/
 
 
@@ -112,24 +107,23 @@ void reception_UDP(int port, int nb_message, int lg_message)
   int lg_dist;
   char *message=malloc(sizeof(char)*lg_message) ;
 
-  if((sock=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP))==-1) /*creation du socket*/ 
+  if((sock=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP))==-1) /création du socket/ 
     {
       printf("Erreur à la création du socket\n");
       exit(1);
     }
   
-  	memset((char*)&addr_local,0,sizeof(addr_local));         /*reset de addr_local*/ 
- 	addr_local.sin_family=AF_INET;              //attribution des différents attributs de addr_local
+  	memset((char*)&addr_local,0,sizeof(addr_local)); /*reset de addr_local*/ 
+ 	addr_local.sin_family=AF_INET;           //attribution des différents attributs de addr_local
   	addr_local.sin_port=port;
   	addr_local.sin_addr.s_addr=INADDR_ANY;     //par defaut n'imp quelle machine 
 
-	
+
   	if ((bind(sock,(struct sockaddr*)&addr_local, sizeof(addr_local)))==-1) //bind de la réception 
     {
       	printf("Echec du Bind\n");
       	exit(1);
     }
-	
 
 
   	lg_dist=sizeof(addr_distant);
@@ -146,7 +140,7 @@ void reception_UDP(int port, int nb_message, int lg_message)
 
         if (recv!=0)
         {
-	  printf("PUITS : Réception n°%d (%d) : [",i,lg_message);  //mise en forme 
+            printf("PUITS : Réception n°%d (%d) : [",i,lg_message);
             afficher_message(message,recv);
         }
         if (i==nb_message)
@@ -158,111 +152,9 @@ void reception_UDP(int port, int nb_message, int lg_message)
         i++;
     }
   
-   if(close(sock)==-1) 
+   if(close(sock)==-1) //fermeture + test 
     {
       printf("Echec à la destruction du socket\n");
       exit(1);
     }
 }
-
-
-
-void main (int argc, char **argv)
-{
-/* ---------------------------declaration des paramètre--------------------------------------- */ 
-	int c;
-	extern char *optarg;
-	extern int optind;
-	int nb_message = -1; /* Nb de messages à envoyer ou à recevoir, par défaut : 10 en émission, infini en réception */
-	int source = -1 ; /* 0=puits, 1=source */
-	char *dest ;
-	int port ;
-	int tcp=1 ; /* -ici si tcp=1 on est en tcp et si tcp=0 on est en udp ------- par defaut en tcp */ 
-	int lg =30; /* longueur du message par défaut */ 
-	
-/*-----------------------------------------------Debut--------------------------------*/ 
-	while ((c = getopt(argc, argv, "pn:su")) != -1) {
-		switch (c) {
-		case 'p':
-			if (source == 1) {
-				printf("Warning :\n On ne peut être source et puits en même temps, Please enlever une des deux options -s ou -p\n\n");
-				exit(1);
-			}
-			source = 0;
-			break;
-
-		case 's':
-			if (source == 0) {
-				printf("Warning :\n On ne peut être source et puits en même temps, Please enlever une des deux options -s ou -p\n\n");
-				exit(1) ;
-			}
-			source = 1;
-			break;
-			
-		case 'u':
-			tcp=0;
-			printf("l'envoi se fait via udp");
-			break;
-				       
-		case 'n':
-			nb_message = atoi(optarg);
-			break;
-
-		default:
-			printf("usage: ./tsock [-p|-s][-n ##]\n");
-			break;
-		}
-	}
-
-	if (source == -1) {
-		printf("usage: ./tsock [-p|-s][-n ##]\n");
-		exit(1) ;
-	}
-	
-
-	if (source == 1){
-		printf("on est dans le source\n");
-	}
-	else
-		printf("on est dans le puits\n");
-	
-	if (tcp==1)
-            printf("Protocole de transport : TCP | ");
-      
-        else
-            printf("Protocole de transport : UDP | ");
-				       
-	if (nb_message != -1) {
-		if (source == 1)
-			printf("nb de tampons à envoyer : %d\n", nb_message);
-		else
-			printf("nb de tampons à recevoir : %d\n", nb_message);
-	} else {
-		if (source == 1) {
-			nb_message = 10 ;
-			printf("nb de tampons à envoyer = 10 par défaut\n");
-		} else
-		printf("nb de tampons à envoyer = infini\n");
-
-	}
-
-	dest=argv[argc-2];
-	printf("le nom de la machine est: %s \n",dest);
-        port=atoi(argv[argc-1]);
-	printf("le numéro de port est : %d \n ",port);
-    
-
-/*------------------------Envoi du message en UDP ----------------------------------*/
-
-				       
-if (source==1 & tcp ==0){
-       envoi_UDP(port,nb_message,lg,dest);
- }
-/*------------------------Reception UDP---------------------*/
- else if (source==0 & tcp==0) {
-    reception_UDP(port,nb_message,lg);
- }
- 
-}
-
-

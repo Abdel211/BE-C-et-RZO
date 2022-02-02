@@ -1,0 +1,160 @@
+#include <sys/types.h>
+/* constantes relatives aux domaines, types et protocoles */
+#include <sys/socket.h>
+/* constantes et structures propres au domaine UNIX */
+#include <sys/un.h>
+/* constantes et structures propres au domaine INTERNET */
+#include <netinet/in.h>
+/* structures retournées par les fonctions de gestion de la base de
+données du réseau */
+#include <netdb.h>
+/* pour les entrées/sorties */
+#include <stdio.h>
+/* pour la gestion des erreurs */
+#include <errno.h>
+#include <stdlib.h>
+
+
+
+
+/*---------------creation de fonction-----------------------*/
+/*---Création du socket UDP et envoi et reception ---------*/
+
+				      
+/* ------------------------déclaration de fonctions ----------------------------*/ 
+//void construire_message2(char *message, char motif, int lg, int i);
+//void afficher_message(char *message, int lg);
+void envoi_UDP(int port, int nb_message  , int lg_msg, char*dest);
+void reception_UDP(int port, int nb_message , int lg_message);
+void construire_message(char *message,char motif,int lg);
+
+/*--------------définition de fonction --------------------------------------------------*/
+/*----------------fonction construction de message---------------------------------*/ 
+void construire_message(char *message,char motif,int lg){
+	int i ;
+	for (i=0;i<lg;i++)
+		message[i]=motif;
+}
+/*------------------fonction affichage  message ----------------------------------------*/ 
+void afficher_message(char *message, int lg)
+
+{
+  	for (int i=0;i<lg;i++)
+  	    printf("%c", *(message+i));
+  	printf("]\n");
+}
+
+/*-----------------------fonction envoi sous protocole UDP -------------------------------*/ 
+
+void envoi_UDP(int port ,int nb_mess , int lg_msg,char*dest)
+{
+	
+  	int length_addr_dist;
+  	length_addr_dist=sizeof(struct sockaddr_in);
+ 	 
+  	int sock;
+ 	int sent;
+  	struct sockaddr_in addr_distant;
+  	struct hostent* hp;
+  	char *message=malloc(sizeof(char)*lg_msg) ;
+
+   	if((sock=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP))==-1) /* creation socket + test erreur ( -1 si le socket ne s'ouvre pas correctement)*/
+    {
+      printf("pb création du socket\n");
+      exit(1);
+    }
+  	memset((char*)&addr_distant,0,sizeof(addr_distant));
+  	addr_distant.sin_family=AF_INET; /internet/ 
+  	addr_distant.sin_port=port; */num de port */ 
+
+  	if((hp=gethostbyname(dest))==NULL)
+    {
+      printf("Erreur du gesthostbyname _n");
+      exit(1);
+    }
+
+  	memcpy((char*)&(addr_distant.sin_addr.s_addr), hp->h_addr, hp->h_length);
+
+  	for (int i=1; i<=nb_mess ; i++)
+    {
+    	construire_message(message,'a',lg_msg);
+      	printf("SOURCE : Envoi n°%d (%d) : [", i, lg_msg);
+      	
+
+      	if((sent=sendto(sock,message,lg_msg,0,(struct sockaddr*)&addr_distant,sizeof(addr_distant)))==-1)   
+      	{
+      		printf("Erreur sendto\n");
+      		exit(1);
+      	}
+      	afficher_message(message,sent);
+    }
+
+  	if(close(sock)==-1) //fermeture du socket + test 
+    {
+      printf("Echec à la destruction du socket\n");
+      exit(1);
+    }
+
+	/*-----------------Reception UDP---------------------*/
+
+
+void reception_UDP(int port, int nb_message, int lg_message)
+{
+
+  int sock;
+  struct sockaddr_in addr_local,addr_distant;
+  int recv;
+  int lg_dist;
+  char *message=malloc(sizeof(char)*lg_message) ;
+
+  if((sock=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP))==-1) /création du socket/ 
+    {
+      printf("Erreur à la création du socket\n");
+      exit(1);
+    }
+  
+  	memset((char*)&addr_local,0,sizeof(addr_local)); /reset de addr_local/ 
+ 	addr_local.sin_family=AF_INET;                  //attribution des différents attributs de addr_local
+  	addr_local.sin_port=port;
+  	addr_local.sin_addr.s_addr=INADDR_ANY;         //par defaut n'imp quelle machine 
+
+
+  	if ((bind(sock,(struct sockaddr*)&addr_local, sizeof(addr_local)))==-1) //bind de la réception 
+    {
+      	printf("Echec du Bind\n");
+      	exit(1);
+    }
+
+
+  	lg_dist=sizeof(addr_distant);
+
+    int i=1;
+    while(recv!=0)
+    {
+        recv=recvfrom(sock,message,lg_message,0,(struct sockaddr*)&addr_distant,&lg_dist);
+        if (recv==-1) // prcess de réception (recvfrom natif à l'API socket, + test 
+        {
+            printf("Erreur receive from\n");
+            exit(1);
+        }
+
+        if (recv!=0)
+        {
+            printf("PUITS : Réception n°%d (%d) : [",i,lg_message);
+            afficher_message(message,recv);
+        }
+        if (i==nb_message)
+        {
+            recv=0;
+            printf("On a atteint le nombre de messages à recevoir\n");
+        }
+
+        i++;
+    }
+  
+   if(close(sock)==-1) //fermeture + test 
+    {
+      printf("Echec à la destruction du socket\n");
+      exit(1);
+    }
+}
