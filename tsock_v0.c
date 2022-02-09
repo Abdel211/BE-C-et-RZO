@@ -23,8 +23,8 @@ données du réseau */
 /*---------------creation de fonction-----------------------*/
 /* ----------------------déclaration de fonctions ----------------------------*/ 
 
-//void construiremessage2(char *message, char motif, int lg, int i);
-//void afficher_message(char *message, int lg);
+void construire_message2(char *message,char motif,int lg,int i);
+void afficher_message(char *message, int lg);
 void envoi_UDP(int port, int nb_message  , int lg_msg, char*dest);
 void reception_UDP(int port, int nb_message , int lg_message);
 void construire_message(char *message,char motif,int lg);
@@ -40,6 +40,31 @@ void construire_message(char *message,char motif,int lg){
 	for (i=0;i<lg;i++)
 		message[i]=motif;
 }
+
+/*-----------------------------construction de messages selon le cahier de charge ---------------------------*/
+// aterminer 
+/* void construire_message2(char *message,char motif,int lg,int i) */
+/* { */
+/*   int j; */
+/*   char alpha[]="abcdefghijklmnopqrstuvwxyz"; */
+/*   if (i>=27) */
+/*     { */
+/*       if (i%26==0) { */
+/* 	motif='z'; */
+/*       else  */
+/* 	motif=alpha[i%26 -1]; */
+/*     } */
+/*   else */
+/*     motif=alpha[i-1]; */
+/*     } */
+
+
+/*   for(j=0, j<lg-5 , j++) { */
+/*     *(message+j+5)=motif; */
+    
+/*   } */
+/* } */
+      
 /*------------------fonction affichage  message ----------------------------------------*/ 
 void afficher_message(char *message, int lg)
 
@@ -111,8 +136,8 @@ void reception_UDP(int port, int nb_message, int lg_message)
   int recv;
   int lg_dist;
   char *message=malloc(sizeof(char)*lg_message) ;
-
-  if((sock=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP))==-1) /*creation du socket*/ 
+  sock=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP); 
+  if(sock==-1) /*creation du socket*/ 
     {
       printf("Erreur à la création du socket\n");
       exit(1);
@@ -120,10 +145,10 @@ void reception_UDP(int port, int nb_message, int lg_message)
   
   	memset((char*)&addr_local,0,sizeof(addr_local));         /*reset de addr_local*/ 
  	addr_local.sin_family=AF_INET;              //attribution des différents attributs de addr_local
-  	addr_local.sin_port=port;
+  	addr_local.sin_port=htons(port);
   	addr_local.sin_addr.s_addr=INADDR_ANY;     //par defaut n'imp quelle machine 
 
-	
+		
   	if ((bind(sock,(struct sockaddr*)&addr_local, sizeof(addr_local)))==-1) //bind de la réception 
     {
       	printf("Echec du Bind\n");
@@ -165,6 +190,176 @@ void reception_UDP(int port, int nb_message, int lg_message)
     }
 }
 
+/*----------------------------Protocole TCP ------------------------------*/
+/*-----------------------------------coté recepteur --- source=1 -----------------------*/
+void recepteurTCP(int port , int nb_message, int lg_msg,char*dest)
+{
+  int sock;
+  int sent;
+  struct sockaddr_in addr_distant ;
+  int lg_addr_distant=sizeof(addr_distant);
+  struct hostent *hp;
+  char motif;
+  char * message=malloc(lg_msg*sizeof(char));
+  int envoi=-1;
+/*------------------------création du socket local  page 16 poly ----------------------------------*/
+  sock=socket(AF_INET,SOCK_STREAM,0);
+  if (sock==-1){
+    printf("ouverture du socket impossible");
+    exit(1);
+    }
+/*---------------------------adressage du socket  page 20 poly ----------------------------*/
+  memset((char*)&addr_distant,0,sizeof(addr_distant));
+  addr_distant.sin_family=AF_INET;  
+  addr_distant.sin_port=htons(port);    
+  if((hp=gethostbyname(dest))==NULL)
+{
+    printf("erreur gethostbyname\n");
+    exit(1);
+}
+
+  memcpy((char*)&(addr_distant.sin_addr.s_addr), hp->h_addr , hp->h_length);
+/*---------------------------- demande de connexion -----------------------------------*/
+  if (connect(sock,(struct sockaddr *)&addr_distant,sizeof(addr_distant))==-1){
+    printf("échec de connexion\n");
+    exit(1);
+}
+
+/*-----------------------------------transfert de données----------------------------*/
+  for (int i=1; i<=nb_message ; i++)
+    {
+      construire_message(message,'a',lg_msg);
+      printf("SOURCE : Envoi n°%d (%d) : [", i, lg_msg);
+      afficher_message(message,lg_msg);
+      afficher_message(message,lg_msg);
+      
+        
+      if((sent=write(sock,message,lg_msg/*,0,(struct sockaddr*)&addr_distant,lg_addr_distant)*/))==-1){
+	printf("Erreur dans la fct write\n");
+        exit(1);
+      }
+          
+              
+         
+          
+
+    }
+/*------------------------------fermeture de connexion page 48 poly ---------------------------*/
+if(shutdown(sock,2)==-1)   //le processus ne veut ni recevoir ni emmettre
+    {
+        printf("probleme dans la fermeture de connexion de tcp  \n");
+        exit(1);
+    }
+/*----------------------destruction du socket page 14 poly ------------------------------------------------------------------------------*/
+if (close(sock)==-1)
+    {
+        printf("Echec de la destrcution du socket local ");
+        exit(1);
+    }
+
+    printf("Message envoyé \n");
+}
+
+/*--------------------------Coté serveur  source=0--------------------------------------------------------------------------------------*/
+void serveurTCP(int port , int nb_message, int lg_msg)
+{
+/*-------------------------------------Déclaration des param----------------------------------------------------------------------------*/
+  int sock ;  
+  struct sockaddr* addr_distant;
+  struct sockaddr_in addr_local;
+  int lg_addr_distant=sizeof(addr_distant);
+  int lg_addr_local=sizeof(addr_local);
+  struct hostent *hp;
+  char * message=malloc(lg_msg*sizeof(char));
+  int sock2; //utilisé pour le connect (refus de connexion coté serveur)
+  int lg_recv=-1;
+/*----------------------Création du socket--------------------page 26 poly--------------------------------------------------------------*/
+    
+
+   if ((sock=socket(AF_INET,SOCK_STREAM,0))==-1)
+    {
+      printf("prob dans la création du socket locale \n");
+      exit(1);
+      
+        
+    }
+
+   memset((char*)&addr_local, 0 , sizeof(addr_local));
+   addr_local.sin_family=AF_INET;
+   addr_local.sin_addr.s_addr=INADDR_ANY;     //n'importe quelle adresse IP
+   addr_local.sin_port=htons(port);
+    
+ //association @ socket à la representation interne
+
+   if (bind(sock,(struct sockaddr *)&addr_local, lg_addr_local)==-1)
+    {
+       printf("prob du bind \n");
+       exit(1);
+      
+       
+    }
+    
+/*-------------verification du nbr de connexions en attentes --------------------*/
+   if (listen(sock,80)==-1){
+     printf("trop de co en wainting \n");
+     exit(1);
+   }
+
+    
+
+
+/*------------cas de refus de connexion ------------------------------------*/
+   if ((sock2 = accept(sock,(struct sockaddr*)&addr_distant,&lg_addr_distant))==-1)
+    {
+      printf("le serveur refuse de se connecter snif \n");
+      exit(1);
+        
+    }
+/*---------------reception de donnée pareil que udp ---------------------------*/
+   int i=1;
+   while(lg_recv!=0)
+    {
+      lg_recv=read(sock2,message,lg_msg);
+      if (lg_recv==-1)
+        {
+	  printf("Erreur receive from lecture impo \n");
+          exit(1);
+	  
+            
+        }
+
+      if (lg_recv!=0)
+        {
+	  printf("PUITS : Réception n°%d (%d) : [",i,lg_msg);  //mise en forme
+          afficher_message(message,lg_recv);
+      
+        }
+      if (i==nb_message)
+        {
+	  lg_recv=0;
+          printf("On a atteint le nombre de messages à recevoir\n");
+            
+        }
+
+      i++;
+      
+        
+}
+/*--------------fermeture du socket -------------------------------*/
+    if (close(sock)==-1)
+    {
+      printf("Echec de fermeture du socket ");
+      exit(1);
+      
+        
+    }
+
+    free(message); // à cause du malloc dans la def des para
+    
+}
+
+
+
 
 
 void main (int argc, char **argv)
@@ -181,7 +376,7 @@ void main (int argc, char **argv)
 	int lg =30; /* longueur du message par défaut */ 
 	
 /*-----------------------------------------------Debut--------------------------------*/ 
-	while ((c = getopt(argc, argv, "pn:su")) != -1) {
+	while ((c = getopt(argc, argv, "pn:sul:")) != -1) {
 		switch (c) {
 		case 'p':
 			if (source == 1) {
@@ -201,12 +396,20 @@ void main (int argc, char **argv)
 			
 		case 'u':
 			tcp=0;
-			printf("l'envoi se fait via udp");
+			printf("l'envoi se fait via udp\n");
 			break;
 				       
 		case 'n':
 			nb_message = atoi(optarg);
+			printf("le nombre  de  messages est : %d \n ",nb_message);
 			break;
+
+		case 'l':
+		        lg=atoi(optarg);
+		        printf("la longueur du message est : %d \n ",lg);
+			break;
+		  
+		      
 
 		default:
 			printf("usage: ./tsock [-p|-s][-n ##]\n");
@@ -245,9 +448,14 @@ void main (int argc, char **argv)
 		printf("nb de tampons à envoyer = infini\n");
 
 	}
+	
 
 	dest=argv[argc-2];
-	printf("le nom de la machine est: %s \n",dest);
+	if (source==1) {
+	  printf("le nom de la machine est: %s \n",dest);
+	}
+	  
+	
         port=atoi(argv[argc-1]);
 	printf("le numéro de port est : %d \n ",port);
     
@@ -262,7 +470,13 @@ if (source==1 & tcp ==0){
  else if (source==0 & tcp==0) {
     reception_UDP(port,nb_message,lg);
  }
- 
+ /*------------------------Envoi du message en TCP ----------------------------------*/
+ else if (source==1 & tcp==1) {
+   recepteurTCP(port,nb_message,lg,dest);
+ }
+/*--------------------------Reception via TCP ------------------------------------*/
+ else if (source==0 & tcp==1) {
+   serveurTCP(port,nb_message,lg);
 }
-
+}
 
