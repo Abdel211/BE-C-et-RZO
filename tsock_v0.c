@@ -17,6 +17,7 @@ données du réseau */
 #include <unistd.h>
 
 
+/*---------------------------------------------------------------Ceci est la première partie -----------------------------------------------------------*/
 
 
 
@@ -185,7 +186,6 @@ void envoi_UDP(int port ,int nb_mess , int lg_msg,char*dest)
 
         affichage2(i,message);
 	construire_message2(message,'a',lg_msg,i);
-      //construire_message(message,'a',lg_msg);
       	printf("SOURCE : Envoi n°%d (%d) : [", i, lg_msg);
       	
 
@@ -314,7 +314,7 @@ void recepteurTCP(int port , int nb_message, int lg_msg,char*dest)
      
       
         
-      if((sent=write(sock,message,lg_msg/*,0,(struct sockaddr*)&addr_distant,lg_addr_distant)*/))==-1){
+      if((sent=write(sock,message,lg_msg))==-1){
 	printf("Erreur dans la fct write\n");
         exit(1);
       }
@@ -438,25 +438,136 @@ void serveurTCP(int port , int nb_message, int lg_msg)
     
 }
 
+/*-------------------------Partie 2 :BAL----------------------------------*/
+/*-----------------------Emetteur Bal-------------------------------------*/
+
+void EmetteurBAL(int port, char* dest, int nb_message, int lg_msg, int nBAL)
+{
+    //Déclarations
+    int sock;
+    struct sockaddr_in addr_distant ;
+    int lg_addr_distant=sizeof(addr_distant);
+    struct hostent *hp;
+    char motif;
+    char * message=malloc(lg_msg*sizeof(char));
+    int envoi=-1;
+    int lg_pdu=50;
+    int lg_recv;
+    char*pdu=malloc(lg_pdu*sizeof(char));
+
+//---------------------------------------
+//--------Etablissement connexion--------
+//---------------------------------------
+  
+
+    sprintf(pdu,"0 %d %d %d",nBAL, nb_message,lg_msg);
+
+    //Création socket
+    if((sock=socket(AF_INET,SOCK_STREAM,0))==-1)
+    {
+        printf("Erreur à l'ouverture du Socket Stream");
+        exit(1);
+    }
+    //Construction adresse socket distant
+    memset((char*)&addr_distant,0,sizeof(addr_distant));
+    addr_distant.sin_family=AF_INET;  //Internet
+    addr_distant.sin_port=htons(port);       //Numéro de Port
+
+    //Affectation IP
+    if((hp=gethostbyname(dest))==NULL)
+    {
+        printf("Erreur de requête IP.\n");
+        exit(1);
+    }
+
+    memcpy((char*)&(addr_distant.sin_addr.s_addr), hp->h_addr , hp->h_length);
+
+    //Demande de connexion
+
+    if (connect(sock,(struct sockaddr *)&addr_distant,sizeof(addr_distant))==-1)
+    {
+        perror("Erreur lors de la connexion, en attente de la tentative suivante \n");
+        exit(1);
+    }
+//-----------------------------------------
+//----------------Envoi PDU----------------
+//-----------------------------------------
+
+    if ((envoi=write(sock,pdu,lg_pdu))==-1)
+    {
+        printf("Echec de l'envoi du PDU Emetteur (fonction write en défaut)\n");
+        exit(1);
+    }
+    //-----------------------------------------
+//----------TRANSFERT DE DONNEES-----------
+//-----------------------------------------
+
+
+
+    for (int i=1; i<=nb_message;i++)
+    {
+        printf("SOURCE : lettre n°%d (%d) [", i,lg_msg);
+
+        //Création du message
+        construire_message2(message,motif,lg_msg,i);
+        affichage2(nBAL,message);
+        afficher_message(message,lg_msg);
+
+        //Envoi du message
+
+        if ((envoi=write(sock,message,(lg_msg)))==-1)
+        {
+            printf("Echec de l'envoi du message (fonction write en défaut)\n");
+            exit(1);
+        }
+
+    }
+
+
+
+    //Fermeture connexion
+
+    if(shutdown(sock,2)==-1)
+    {
+        printf("Erreur à la fermeture de la connexion TCP \n");
+        exit(1);
+    }
+
+    //Fermeture Socket
+    if (close(sock)==-1)
+    {
+        printf("Echec de la fermeture du socket distant");
+        exit(1);
+    }
+
+    free(message);
+    free(pdu);
+    printf("Envoi effectué avec succès\n");
+}
+
+/*------------------------------------------Service boite à lettres -------------------------------------------------------*/
 
 
 
 
 void main (int argc, char **argv)
 {
-/* ---------------------------declaration des paramètre--------------------------------------- */ 
+/* ---------------------------declaration des paramètre-------------------------------------------------------------- */ 
 	int c;
 	extern char *optarg;
 	extern int optind;
 	int nb_message = -1; /* Nb de messages à envoyer ou à recevoir, par défaut : 10 en émission, infini en réception */
-	int source = -1 ; /* 0=puits, 1=source */
+	int source = -1 ; /* 0=puits, 1=source  , 2=emetteur_bal */
 	char *dest ;
 	int port ;
 	int tcp=1 ; /* -ici si tcp=1 on est en tcp et si tcp=0 on est en udp ------- par defaut en tcp */ 
-	int lg =30; /* longueur du message par défaut */ 
+	int lg =30; /* longueur du message par défaut */
+	int recep=-1;
+	int bal=-1;
+	int nBAL=-1;
 	
-/*-----------------------------------------------Debut--------------------------------*/ 
-	while ((c = getopt(argc, argv, "pn:sul:")) != -1) {
+/*-----------------------------------------------Debut---------------------------------------------------------*/ 
+	while ((c = getopt(argc, argv, "pn:sul:e:b")) != -1) {
 		switch (c) {
 		case 'p':
 			if (source == 1) {
@@ -483,19 +594,47 @@ void main (int argc, char **argv)
 			nb_message = atoi(optarg);
 			printf("le nombre  de  messages est : %d \n ",nb_message);
 			break;
-
+		/* case 'b': */
+		/*   if (source!=-1) */
+		/* 	   { */
+                /*                printf("\n On peut pas  utiliser le service de Boite aux lettres et etre dans le puits|source au même time.\n Please veuillez  retirer une des options -e ou -s|-p\n\n"); */
+                /*                exit(1); */
+		/* 	   } */
+		/*   source=3; */
+		  
+		  
+				  
 		case 'l':
 		        lg=atoi(optarg);
 		        printf("la longueur du message est : %d \n ",lg);
 			break;
-		  
-		      
+			
+	       case 'e' :
+		        if (source!=-1)
+			   {
+                               printf("\n On peut pas  utiliser le service de Boite aux lettres et etre dans le puits|source au même time.\n Please veuillez  retirer une des options -e ou -s|-p\n\n");
+                               exit(1);
+			   }
+			  
+               
+			if (recep==1)
+			  {
+			    printf("On ne peut pas être émetteur et récepteur, -r ou -e, pas les deux\n");
+			    exit(1);
+			  }
+			source=2; 
+			bal=1;
+			recep=0;
+			nBAL = atoi(optarg);
+			break;    
 
 		default:
 			printf("usage: ./tsock [-p|-s][-n ##]\n");
 			break;
 		}
+	       
 	}
+	// while
 
 	if (source == -1) {
 		printf("usage: ./tsock [-p|-s][-n ##]\n");
@@ -504,11 +643,14 @@ void main (int argc, char **argv)
 	
 
 	if (source == 1){
-		printf("on est dans le source\n");
+		printf("On est dans le source\n");
 	}
-	else
-		printf("on est dans le puits\n");
-	
+	else if (source==0) {
+		printf("On est dans le puits\n");
+	}
+	else if (source==2) {
+		printf("On est émetteur dans le bal \n");
+	}
 	if (tcp==1)
             printf("Protocole de transport : TCP | ");
       
@@ -540,23 +682,30 @@ void main (int argc, char **argv)
 	printf("le numéro de port est : %d \n ",port);
     
 
-/*------------------------Envoi du message en UDP ----------------------------------*/
-
-				       
+/*------------------------Envoi du message en UDP ----------------------------------*/				       
 if (source==1 & tcp ==0){
        envoi_UDP(port,nb_message,lg,dest);
  }
+ 
 /*------------------------Reception UDP---------------------*/
  else if (source==0 & tcp==0) {
     reception_UDP(port,nb_message,lg);
  }
+ 
  /*------------------------Envoi du message en TCP ----------------------------------*/
  else if (source==1 & tcp==1) {
    recepteurTCP(port,nb_message,lg,dest);
  }
+ 
 /*--------------------------Reception via TCP ------------------------------------*/
  else if (source==0 & tcp==1) {
    serveurTCP(port,nb_message,lg);
+}
+ 
+/*-------------------------------second part ---------------------------------*/
+/*-------------------------------Bal Emmetteur ------------------------------*/
+ else if (bal==1 & recep==0) {
+   EmetteurBAL(port, dest,nb_message,lg, nBAL); 
 }
 }
 
