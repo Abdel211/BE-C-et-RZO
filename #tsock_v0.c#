@@ -483,7 +483,8 @@ void main (int argc, char **argv)
 			nb_message = atoi(optarg);
 			printf("le nombre  de  messages est : %d \n ",nb_message);
 			break;
-
+		case 'e':
+		  
 		case 'l':
 		        lg=atoi(optarg);
 		        printf("la longueur du message est : %d \n ",lg);
