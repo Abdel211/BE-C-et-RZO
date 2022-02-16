@@ -74,7 +74,8 @@ Les fonctionnalités du serveur BAL (option "-b") relatives aux interactions ave
 
 - rajout d'un message dans une BAL d'un récepteur à la dernière position
 
-Les fonctionnalités du serveur BAL (option "-b") relatives aux interactions avec les récepteurs pour :
+Les fonctionnalités du serveur BAL (opti0 1 2 30]
+PUITS : Réception n°2 (30) : [----1aaaaaon "-b") relatives aux interactions avec les récepteurs pour :
 - accepter les demandes de connexions TCP et l'identification, par le traitement du PDU applicatif, du rôle "Récepteur" de l'application qui a initiée la demande de connexion
 
 - prendre en charge les fonctions en lien avec la manipulation de la structure de données pour le compte d'une application "Récepteur" :
@@ -92,15 +93,15 @@ Le Récepteur  (l'option "-r" de tsock) : qui est une adaptation de la version v
 ## Avancement sur la partie 2
 
 ### Pour les fonctionnalités de l'émetteur (l'option "-e" de tsock)
- veuillez indiquer les étapes que vous avez validées.
+ veuillez indiquer les -n étapes que vous avez validées.
 
-[ ] demande d'établissement de connexion TCP avec le serveur BAL fonctionnelle
+[*] demande d'établissement de connexion TCP avec le serveur BAL fonctionnelle
 
-[ ] transmission du PDU applicatif en charge de le déclarer en tant que émetteur et éventuellement indiquer la taille et nombre de messages qu'il émet est fonctionnelle
+[] transmission du PDU applicatif en charge de le déclarer en tant que émetteur et éventuellement indiquer la taille et nombre de messages qu'il émet est fonctionnelle
 
-[ ] émission des messages au serveur BAL fonctionnelle
+[*] émission des messages au serveur BAL fonctionnelle
 
-[ ] cloture de la connexion TCP avec le serveur BAL fonctionnelle
+[*] cloture de la connexion TCP avec le serveur BAL fonctionnelle
 
 
 ### Pour les fonctionnalités du serveur BAL (option "-b") relatives aux interactions avec les Emetteur
