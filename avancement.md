@@ -97,7 +97,7 @@ Le Récepteur  (l'option "-r" de tsock) : qui est une adaptation de la version v
 
 [*] demande d'établissement de connexion TCP avec le serveur BAL fonctionnelle
 
-[] transmission du PDU applicatif en charge de le déclarer en tant que émetteur et éventuellement indiquer la taille et nombre de messages qu'il émet est fonctionnelle
+[*] transmission du PDU applicatif en charge de le déclarer en tant que émetteur et éventuellement indiquer la taille et nombre de messages qu'il émet est fonctionnelle
 
 [*] émission des messages au serveur BAL fonctionnelle
 
@@ -107,30 +107,30 @@ Le Récepteur  (l'option "-r" de tsock) : qui est une adaptation de la version v
 ### Pour les fonctionnalités du serveur BAL (option "-b") relatives aux interactions avec les Emetteur
 veuillez indiquer étapes que vous avez validées
 
-[ ] Acceptation des demandes de connexions TCP et l'identification,par le traitement du PDU applicatif, du rôle "Emetteur" de l'application qui a initiée la demande de connexion et ses caractéristiques  (nombre et taille des messages)  est fonctionnelle
+[*] Acceptation des demandes de connexions TCP et l'identification,par le traitement du PDU applicatif, du rôle "Emetteur" de l'application qui a initiée la demande de connexion et ses caractéristiques  (nombre et taille des messages)  est fonctionnelle
 
-[ ] recherche de la boîte aux lettres (BAL) relative à un récepteur fonctionnelle
+[*] recherche de la boîte aux lettres (BAL) relative à un récepteur fonctionnelle
 
-[ ] creation/rajout de BAL d'un récepteur fonctionnelle
+[*] creation/rajout de BAL d'un récepteur fonctionnelle
 
-[ ] rajout d'un message dans une BAL d'un récepteur à la dernière position est fonctionnelle
+[*] rajout d'un message dans une BAL d'un récepteur à la dernière position est fonctionnelle
 
 
 ### Pour les fonctionnalités du serveur BAL (option "-b") relatives aux interactions avec les Récepteurs
  veuillez indiquer les étapes que vous avez validées
 
-[ ] acceptation des demandes de connexions TCP et l'identification, par le traitement du PDU applicatif, du rôle "Récepteur" de l'application qui a initiée la demande de connexion est fonctionnelle
+[*] acceptation des demandes de connexions TCP et l'identification, par le traitement du PDU applicatif, du rôle "Récepteur" de l'application qui a initiée la demande de connexion est fonctionnelle
 
-[ ] vérification de la présence d'une BAL associée à un récepteur et renvoi de l'accès à la liste des messages disponibles pour le récepteur est fonctionnelle
+[*] vérification de la présence d'une BAL associée à un récepteur et renvoi de l'accès à la liste des messages disponibles pour le récepteur est fonctionnelle
 
 
 ### Pour les fonctionnalités du "Récepteur" (l'option "-e" de tsock) 
 veuillez indiquer les étapes que vous avez validées.
 
-[ ] demande de l'établissement de connexion TCP avec le serveur BAL est fonctionnelle
+[*] demande de l'établissement de connexion TCP avec le serveur BAL est fonctionnelle
 
-[ ] Transmission du PDU applicatif en charge de le déclarer en tant que récepteur  est fonctionnelle
+[*] Transmission du PDU applicatif en charge de le déclarer en tant que récepteur  est fonctionnelle
 
-[ ] prise en charge la réception et affichage de ses éventuels messages transmis par le serveur BAL jusqu'à la fermeture de la connexion TCP déclenchée par le serveur BAL est fonctionnelle
+[*] prise en charge la réception et affichage de ses éventuels messages transmis par le serveur BAL jusqu'à la fermeture de la connexion TCP déclenchée par le serveur BAL est fonctionnelle
 
-[ ] parcours des messages d'une BAL opérationnel
+[*] parcours des messages d'une BAL opérationnel
