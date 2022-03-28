@@ -568,7 +568,7 @@ void RecepteurBAL(int port, char* dest, int nBAL)
     char *pdu = malloc(lg_pdu*sizeof(char));
 
     /*-------Création du socket local à l’aide de la primitive socket(  ,  ,  )---------------------------*/
-
+    sprintf(pdu, "1 %d" , nBAL);
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
     {
         printf("Erreur à l'ouverture du Socket Stream");
@@ -578,7 +578,7 @@ void RecepteurBAL(int port, char* dest, int nBAL)
 /*------------------------Construction de l’adresse du socket serveur BAL -----------------------------------*/
     memset((char *) &addr_distant, 0, sizeof(addr_distant));
     addr_distant.sin_family = AF_INET;  //Internet
-    addr_distant.sin_port = port;       //Numéro de Port
+    addr_distant.sin_port =htons(port);       //Numéro de Port
 
 /*------------------------- Affectation IP-------------------------------------- */
     if ((hp = gethostbyname(dest)) == NULL) {
@@ -630,7 +630,9 @@ void RecepteurBAL(int port, char* dest, int nBAL)
             exit(1);
         }
         printf("PUITS : Réception de la lettre n°%d : [",n);
-        afficher_message(message,lg);
+	
+	afficher_message(message,lg);
+
         n++;
     }
 
@@ -643,7 +645,7 @@ void RecepteurBAL(int port, char* dest, int nBAL)
         exit(1);
     }
 }
- 
+
 /*------------------------------------------Service boite à lettres -------------------------------------------------------*/
 //Variable qui donne la longueur max d'un message
 //Définitions des types
@@ -744,12 +746,12 @@ void Ajoute_BAL(int n, LISTE_BAL * liste)
     BAL *new =malloc(sizeof(struct BAL));
     new->num=n;
     new->nb=0;
-    new->l_first;
+    new->l_first=NULL;
     new->l_last=NULL;
     new->l_current=NULL;
     new->suiv=NULL;
-
-    if (liste == NULL)
+    //MODIF
+    if (liste->first == NULL)
     {
       liste->first = new ;
       liste->last = new ;
@@ -761,6 +763,7 @@ void Ajoute_BAL(int n, LISTE_BAL * liste)
 		 
     }
     liste->nb++;
+    // printf("Test-R: BAL ajoute  \n");
 }
 
 /* /\*-------------fonction vide ---------------------------*\/ */
@@ -803,10 +806,13 @@ void Ajoute_BAL(int n, LISTE_BAL * liste)
 BAL* trouver_BAL(LISTE_BAL*liste, int num)
 {
     BAL* bal=malloc(sizeof(struct BAL));
+
+
+    if (liste ==NULL) printf("Test-R: c est NULL  \n");
     liste->current=liste->first;
     if (liste->first==NULL)
     {
-
+      //printf("Test-R: c est NULL  \n");
       Ajoute_BAL(num,liste);
       bal=liste->first;
 
@@ -1005,10 +1011,14 @@ void BALf(int port, char*dest)
   LISTE_BAL* liste;
 
 
- 
+  //MODIF - initialiser votre structure accedanst à la liste des BAL
+
+  liste=init_BAL();
+  
   
 /*---------------------Création du socket local à l’aide de la primitive socket()--------------------------------*/
-   
+
+  
     if ((sock=socket(AF_INET,SOCK_STREAM,0))==-1)
     {
         printf("Echec de la création d'un socket local\n");
@@ -1064,6 +1074,7 @@ while (1)
 	  {
 	    
 	    printf("Reception des lettres dans la BAL  %d  \n",nBAL);
+	    
 	   
 	     message=malloc(lg*sizeof(char));
 	  
@@ -1079,16 +1090,22 @@ while (1)
 	   
             while (n!=nb)
             {
+
                 message = malloc(lg* sizeof(char));
                 if ((lg_recv = read(sock_bis, message, lg)) == -1)
                 {
                     printf("Erreur de lecture\n");
                     exit(1);
                 }
+	       
+
                 if (lg_recv>0)
                 {
                     ajout_LETTRE(n,lg, bal,message);
+		   
                 }
+		//else 
+		//  break;
                 n++;
             }
 
@@ -1164,7 +1181,8 @@ while (1)
 	    
 
 
-
+//------------------------------------------Fonction principale---------------------------------------
+/*-------------------------------------------------------------------------------------------------*/
 
 
 

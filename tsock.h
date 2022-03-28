@@ -22,8 +22,8 @@ données du réseau */
 
 				      
 /* ------------------------déclaration de fonctions ----------------------------*/ 
-//void construire_message2(char *message, char motif, int lg, int i);
-//void afficher_message(char *message, int lg);
+void construire_message2(char *message, char motif, int lg, int i);
+void afficher_message(char *message, int lg);
 void envoi_UDP(int port, int nb_message  , int lg_msg, char*dest);
 void reception_UDP(int port, int nb_message , int lg_message);
 void construire_message(char *message,char motif,int lg);
